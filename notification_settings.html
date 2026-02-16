@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Notification Settings - DarkNet Defend{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="bi bi-bell-fill"></i> Notification Settings
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm ms-3">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </h2>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('notification_settings') }}">
+    <div class="row">
+        <!-- Contact Information -->
+        <div class="col-lg-6 mb-4">
+            <div class="card p-4 h-100">
+                <h4 class="mb-3">
+                    <i class="bi bi-person-lines-fill text-primary"></i> Contact Information
+                </h4>
+                
+                <div class="mb-3">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-control" value="{{ current_user.email }}" disabled aria-label="Email address">
+                    <div class="form-text">Email cannot be changed here. Contact support if needed.</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Phone Number (for SMS)</label>
+                    <input type="tel" class="form-control" id="phone" name="phone" 
+                           value="{% if current_user.phone %}{% if current_user.phone.startswith('+') %}{{ current_user.phone }}{% else %}+91{{ current_user.phone }}{% endif %}{% endif %}" 
+                           placeholder="+917795129038">
+                    <div class="form-text">Include country code (e.g., +1 for US, +91 for India)</div>
+                </div>
+                
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Demo Mode:</strong> In demo mode, notifications are logged to the console instead of being sent. 
+                    Configure SMTP and Twilio credentials in config.py for real notifications.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Email Preferences -->
+        <div class="col-lg-6 mb-4">
+            <div class="card p-4 h-100">
+                <h4 class="mb-3">
+                    <i class="bi bi-envelope-fill text-primary"></i> Email Notifications
+                </h4>
+                
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="email_enabled" name="email_enabled"
+                           {% if prefs.email_enabled %}checked{% endif %}>
+                    <label class="form-check-label" for="email_enabled">
+                        <strong>Enable Email Notifications</strong>
+                    </label>
+                </div>
+                
+                <div class="ms-4">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="email_on_leak_detected" name="email_on_leak_detected"
+                               {% if prefs.email_on_leak_detected %}checked{% endif %}>
+                        <label class="form-check-label" for="email_on_leak_detected">
+                            <i class="bi bi-exclamation-triangle text-danger"></i> When data leak is detected
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="email_on_prevention" name="email_on_prevention"
+                               {% if prefs.email_on_prevention %}checked{% endif %}>
+                        <label class="form-check-label" for="email_on_prevention">
+                            <i class="bi bi-shield-check text-success"></i> When leak is prevented
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="email_daily_summary" name="email_daily_summary"
+                               {% if prefs.email_daily_summary %}checked{% endif %}>
+                        <label class="form-check-label" for="email_daily_summary">
+                            <i class="bi bi-calendar-check text-info"></i> Daily security summary
+                        </label>
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('test_email_notification') }}" class="btn btn-outline-primary btn-sm" 
+                   onclick="event.preventDefault(); document.getElementById('test-email-form').submit();">
+                    <i class="bi bi-send"></i> Send Test Email
+                </a>
+            </div>
+        </div>
+        
+        <!-- SMS Preferences -->
+        <div class="col-lg-6 mb-4">
+            <div class="card p-4 h-100">
+                <h4 class="mb-3">
+                    <i class="bi bi-phone-fill text-primary"></i> SMS Notifications
+                </h4>
+                
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="sms_enabled" name="sms_enabled"
+                           {% if prefs.sms_enabled %}checked{% endif %}>
+                    <label class="form-check-label" for="sms_enabled">
+                        <strong>Enable SMS Notifications</strong>
+                    </label>
+                </div>
+                
+                <div class="ms-4">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="sms_on_leak_detected" name="sms_on_leak_detected"
+                               {% if prefs.sms_on_leak_detected %}checked{% endif %}>
+                        <label class="form-check-label" for="sms_on_leak_detected">
+                            <i class="bi bi-exclamation-triangle text-danger"></i> When data leak is detected
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="sms_on_critical_only" name="sms_on_critical_only"
+                               {% if prefs.sms_on_critical_only %}checked{% endif %}>
+                        <label class="form-check-label" for="sms_on_critical_only">
+                            <i class="bi bi-exclamation-octagon text-warning"></i> Only for critical/high severity
+                        </label>
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('test_sms_notification') }}" class="btn btn-outline-primary btn-sm {% if not current_user.phone %}disabled{% endif %}"
+                   onclick="event.preventDefault(); document.getElementById('test-sms-form').submit();">
+                    <i class="bi bi-send"></i> Send Test SMS
+                </a>
+                {% if not current_user.phone %}
+                <small class="text-muted ms-2">Add phone number first</small>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Monitoring Preferences -->
+        <div class="col-lg-6 mb-4">
+            <div class="card p-4 h-100">
+                <h4 class="mb-3">
+                    <i class="bi bi-eye-fill text-primary"></i> Monitoring Preferences
+                </h4>
+                <p class="text-muted mb-3">Select what types of data to monitor for leaks:</p>
+                
+                <div class="row">
+                    <div class="col-6">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="monitor_email" name="monitor_email"
+                                   {% if prefs.monitor_email %}checked{% endif %}>
+                            <label class="form-check-label" for="monitor_email">
+                                <i class="bi bi-envelope"></i> Email Addresses
+                            </label>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="monitor_phone" name="monitor_phone"
+                                   {% if prefs.monitor_phone %}checked{% endif %}>
+                            <label class="form-check-label" for="monitor_phone">
+                                <i class="bi bi-phone"></i> Phone Numbers
+                            </label>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="monitor_credentials" name="monitor_credentials"
+                                   {% if prefs.monitor_credentials %}checked{% endif %}>
+                            <label class="form-check-label" for="monitor_credentials">
+                                <i class="bi bi-key"></i> Login Credentials
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="monitor_images" name="monitor_images"
+                                   {% if prefs.monitor_images %}checked{% endif %}>
+                            <label class="form-check-label" for="monitor_images">
+                                <i class="bi bi-image"></i> Images
+                            </label>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="monitor_documents" name="monitor_documents"
+                                   {% if prefs.monitor_documents %}checked{% endif %}>
+                            <label class="form-check-label" for="monitor_documents">
+                                <i class="bi bi-file-earmark-text"></i> Documents
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Save Button -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-info-circle text-info"></i>
+                        <span class="text-muted">Changes are saved immediately when you click Save.</span>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-circle"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Data Types Legend -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card p-4">
+            <h5 class="mb-3"><i class="bi bi-info-circle"></i> Data Types We Monitor</h5>
+            <div class="row">
+                <div class="col-md-3 col-6 mb-2">
+                    <span class="badge bg-danger me-2">🖼️</span> Images
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <span class="badge bg-danger me-2">🎥</span> Videos
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <span class="badge bg-warning text-dark me-2">📝</span> Text Content
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <span class="badge bg-warning text-dark me-2">📄</span> Documents
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <span class="badge bg-info me-2">🔊</span> Audio Files
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <span class="badge bg-primary me-2">🔐</span> Credentials
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <span class="badge bg-success me-2">💳</span> Financial Data
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <span class="badge bg-secondary me-2">👤</span> Personal Info
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden forms for test buttons -->
+<form id="test-email-form" method="POST" action="{{ url_for('test_email_notification') }}" class="d-none"></form>
+<form id="test-sms-form" method="POST" action="{{ url_for('test_sms_notification') }}" class="d-none"></form>
+{% endblock %}

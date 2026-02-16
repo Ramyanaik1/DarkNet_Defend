@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+
+{% block title %}Real-Time Security Scanner - DarkNet Defend{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="bi bi-shield-shaded"></i> Real-Time Browser Security Scanner
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm ms-3">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </h2>
+    </div>
+</div>
+
+<!-- Scan Status Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card p-4" id="scan-status-card">
+            <div class="text-center" id="scan-ready">
+                <i class="bi bi-shield-check display-1 text-success mb-3"></i>
+                <h3>Ready to Scan</h3>
+                <p class="text-muted">Click the button below to start a real-time security scan of your browser</p>
+                
+                <div class="d-flex justify-content-center gap-3 flex-wrap mt-4">
+                    <button type="button" class="btn btn-primary btn-lg" id="startScanBtn" onclick="startRealTimeScan()">
+                        <i class="bi bi-search"></i> Start Real-Time Scan
+                    </button>
+                    <form method="POST" action="{{ url_for('simulate_security_scan') }}" class="d-inline">
+                        <button type="submit" class="btn btn-outline-warning btn-lg">
+                            <i class="bi bi-bug"></i> Simulate Attack (Test)
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="text-center d-none" id="scan-progress">
+                <div class="spinner-border text-primary mb-3 scan-spinner" role="status">
+                    <span class="visually-hidden">Scanning...</span>
+                </div>
+                <h3>Scanning Your Browser...</h3>
+                <p class="text-muted" id="scan-status-text">Initializing scan...</p>
+                <div class="progress mt-3 scan-progress-height">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated scan-progress-initial" id="scan-progress-bar" role="progressbar" title="Scan progress" aria-label="Scan progress"></div>
+                </div>
+            </div>
+            
+            <div class="d-none" id="scan-results">
+                <!-- Results will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- What We Scan -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card p-3 h-100 text-center">
+            <i class="bi bi-link-45deg display-4 text-primary mb-2"></i>
+            <h5>URL Analysis</h5>
+            <p class="text-muted small mb-0">Scans visited URLs for phishing, malware, and suspicious patterns</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 h-100 text-center">
+            <i class="bi bi-database-x display-4 text-danger mb-2"></i>
+            <h5>SQL Injection</h5>
+            <p class="text-muted small mb-0">Real-time detection of SQL injection attacks in URLs and forms</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 h-100 text-center">
+            <i class="bi bi-code-slash display-4 text-warning mb-2"></i>
+            <h5>XSS Detection</h5>
+            <p class="text-muted small mb-0">Identifies cross-site scripting attacks in page content</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 h-100 text-center">
+            <i class="bi bi-cookie display-4 text-info mb-2"></i>
+            <h5>Cookie Security</h5>
+            <p class="text-muted small mb-0">Detects cookie hijacking and session theft attempts</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card p-3 h-100 text-center">
+            <i class="bi bi-person-x display-4 text-danger mb-2"></i>
+            <h5>Credential Theft</h5>
+            <p class="text-muted small mb-0">Detects fake login pages and credential phishing attempts</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 h-100 text-center">
+            <i class="bi bi-bug display-4 text-danger mb-2"></i>
+            <h5>Malware Detection</h5>
+            <p class="text-muted small mb-0">Identifies and blocks malicious software downloads</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 h-100 text-center">
+            <i class="bi bi-cloud-upload display-4 text-warning mb-2"></i>
+            <h5>Data Leak Prevention</h5>
+            <p class="text-muted small mb-0">Monitors for sensitive data being sent to external servers</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 h-100 text-center">
+            <i class="bi bi-globe display-4 text-info mb-2"></i>
+            <h5>IP Monitoring</h5>
+            <p class="text-muted small mb-0">Detects connections from suspicious or malicious IP addresses</p>
+        </div>
+    </div>
+</div>
+
+<!-- Blocked Items Section -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card p-4 h-100">
+            <h4 class="mb-3">
+                <i class="bi bi-shield-x text-danger"></i> Blocked Websites
+            </h4>
+            <div id="blocked-urls-list">
+                <p class="text-muted">No websites blocked yet</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-4 h-100">
+            <h4 class="mb-3">
+                <i class="bi bi-ban text-danger"></i> Blocked IP Addresses
+            </h4>
+            <div id="blocked-ips-list">
+                <p class="text-muted">No IP addresses blocked yet</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Scan History -->
+<div class="row">
+    <div class="col-12">
+        <div class="card p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-clock-history"></i> How It Works
+            </h4>
+            <div class="row">
+                <div class="col-md-3 text-center mb-3">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center step-circle">
+                        <span class="h4 mb-0 text-primary">1</span>
+                    </div>
+                    <h6 class="mt-2">Click Scan</h6>
+                    <p class="text-muted small">Start the real-time security scan</p>
+                </div>
+                <div class="col-md-3 text-center mb-3">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center step-circle">
+                        <span class="h4 mb-0 text-primary">2</span>
+                    </div>
+                    <h6 class="mt-2">Get Notified</h6>
+                    <p class="text-muted small">Receive email & SMS that scan started</p>
+                </div>
+                <div class="col-md-3 text-center mb-3">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center step-circle">
+                        <span class="h4 mb-0 text-primary">3</span>
+                    </div>
+                    <h6 class="mt-2">Threat Alert</h6>
+                    <p class="text-muted small">If threats found, get detailed alert</p>
+                </div>
+                <div class="col-md-3 text-center mb-3">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center step-circle">
+                        <span class="h4 mb-0 text-primary">4</span>
+                    </div>
+                    <h6 class="mt-2">Take Action</h6>
+                    <p class="text-muted small">Click to block threats instantly</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Real-time browser scanning functionality
+function startRealTimeScan() {
+    // Show progress
+    document.getElementById('scan-ready').classList.add('d-none');
+    document.getElementById('scan-progress').classList.remove('d-none');
+    document.getElementById('scan-results').classList.add('d-none');
+    
+    let progress = 0;
+    const progressBar = document.getElementById('scan-progress-bar');
+    const statusText = document.getElementById('scan-status-text');
+    
+    const scanSteps = [
+        { progress: 5, text: '📧 Sending scan started notification to email & SMS...' },
+        { progress: 12, text: '🔍 Collecting browser data and cookies...' },
+        { progress: 20, text: '🌐 Analyzing current page URL for malware...' },
+        { progress: 28, text: '🎣 Checking for phishing attacks...' },
+        { progress: 36, text: '💉 Scanning for XSS (Cross-Site Scripting) attacks...' },
+        { progress: 44, text: '🗄️ Detecting SQL Injection attempts in real-time...' },
+        { progress: 52, text: '🍪 Scanning cookies for hijacking attempts...' },
+        { progress: 60, text: '🔐 Checking for credential theft patterns...' },
+        { progress: 68, text: '📤 Detecting data leak attempts...' },
+        { progress: 76, text: '🌐 Checking for suspicious IP connections...' },
+        { progress: 84, text: '⬇️ Scanning for malicious downloads...' },
+        { progress: 92, text: '🦠 Finalizing malware analysis...' },
+        { progress: 98, text: '📊 Generating real-time security report...' },
+    ];
+    
+    let stepIndex = 0;
+    
+    const interval = setInterval(() => {
+        if (stepIndex < scanSteps.length) {
+            progressBar.style.width = scanSteps[stepIndex].progress + '%';
+            statusText.textContent = scanSteps[stepIndex].text;
+            stepIndex++;
+        } else {
+            clearInterval(interval);
+            submitScan();
+        }
+    }, 500);
+}
+
+function submitScan() {
+    // Collect browser data
+    const scanData = {
+        url: window.location.href,
+        history: [],
+        content: document.documentElement.innerHTML.substring(0, 5000),
+        cookies: document.cookie.split(';').map(c => {
+            const [name, value] = c.trim().split('=');
+            return { name, value, domain: window.location.hostname };
+        }),
+        downloads: [],
+        requests: []
+    };
+    
+    // Send to server
+    fetch('/api/security/quick-scan', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(scanData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        showScanResults(data);
+    })
+    .catch(error => {
+        console.error('Scan error:', error);
+        showScanError(error);
+    });
+}
+
+function showScanResults(data) {
+    document.getElementById('scan-progress').classList.add('d-none');
+    document.getElementById('scan-results').classList.remove('d-none');
+    
+    const resultsDiv = document.getElementById('scan-results');
+    const result = data.result || {};
+    const threats = result.threats || [];
+    
+    if (threats.length === 0) {
+        resultsDiv.innerHTML = `
+            <div class="text-center">
+                <i class="bi bi-shield-check display-1 text-success mb-3"></i>
+                <h3 class="text-success">All Clear!</h3>
+                <p>No threats detected. Your browser is secure.</p>
+                <p class="text-muted">Items scanned: ${result.items_scanned || 0}</p>
+                <button class="btn btn-primary mt-3" onclick="resetScan()">
+                    <i class="bi bi-arrow-repeat"></i> Scan Again
+                </button>
+            </div>
+        `;
+    } else {
+        let threatsHtml = '';
+        threats.forEach((threat, index) => {
+            const severityClass = {
+                'critical': 'danger',
+                'high': 'warning',
+                'medium': 'info',
+                'low': 'secondary'
+            }[threat.severity] || 'secondary';
+            
+            const emoji = {
+                'phishing': '🎣',
+                'malware': '🦠',
+                'xss': '💉',
+                'sql_injection': '🗄️',
+                'suspicious_ip': '🌐',
+                'data_leak': '📤',
+                'cookie_hijack': '🍪',
+                'malicious_download': '⬇️',
+                'credential_theft': '🔐'
+            }[threat.type] || '⚠️';
+            
+            threatsHtml += `
+                <div class="alert alert-${severityClass} d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <strong>${emoji} ${threat.type.replace('_', ' ').toUpperCase()}</strong>
+                        <span class="badge bg-${severityClass} ms-2">${threat.severity.toUpperCase()}</span>
+                        <br>
+                        <small>${threat.description}</small>
+                        <br>
+                        <small class="text-muted">Source: ${threat.source.substring(0, 50)}${threat.source.length > 50 ? '...' : ''}</small>
+                    </div>
+                    <form method="POST" action="/security/take-action" class="ms-3">
+                        <input type="hidden" name="threat_id" value="${index}">
+                        <input type="hidden" name="action" value="${threat.suggested_action}">
+                        <input type="hidden" name="target" value="${threat.source}">
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="bi bi-shield-x"></i> Block
+                        </button>
+                    </form>
+                </div>
+            `;
+        });
+        
+        resultsDiv.innerHTML = `
+            <div class="text-center mb-4">
+                <i class="bi bi-exclamation-triangle display-1 text-danger mb-3"></i>
+                <h3 class="text-danger">${threats.length} Threat(s) Detected!</h3>
+                <p>Check your email and SMS for detailed notifications</p>
+            </div>
+            <div class="threats-list">
+                ${threatsHtml}
+            </div>
+            <div class="text-center mt-4">
+                <form method="POST" action="/security/take-all-actions" class="d-inline">
+                    <input type="hidden" name="scan_id" value="${result.scan_id}">
+                    <button type="submit" class="btn btn-danger btn-lg me-2">
+                        <i class="bi bi-shield-x"></i> Block All Threats
+                    </button>
+                </form>
+                <button class="btn btn-outline-primary btn-lg" onclick="resetScan()">
+                    <i class="bi bi-arrow-repeat"></i> Scan Again
+                </button>
+            </div>
+        `;
+    }
+    
+    // Refresh blocked items
+    loadBlockedItems();
+}
+
+function showScanError(error) {
+    document.getElementById('scan-progress').classList.add('d-none');
+    document.getElementById('scan-results').classList.remove('d-none');
+    
+    document.getElementById('scan-results').innerHTML = `
+        <div class="text-center">
+            <i class="bi bi-exclamation-circle display-1 text-danger mb-3"></i>
+            <h3 class="text-danger">Scan Error</h3>
+            <p>${error.message || 'An error occurred during the scan'}</p>
+            <button class="btn btn-primary mt-3" onclick="resetScan()">
+                <i class="bi bi-arrow-repeat"></i> Try Again
+            </button>
+        </div>
+    `;
+}
+
+function resetScan() {
+    document.getElementById('scan-ready').classList.remove('d-none');
+    document.getElementById('scan-progress').classList.add('d-none');
+    document.getElementById('scan-results').classList.add('d-none');
+    document.getElementById('scan-progress-bar').style.width = '0%';
+}
+
+function loadBlockedItems() {
+    fetch('/security/blocked-items')
+        .then(response => response.json())
+        .then(data => {
+            // Update blocked URLs
+            const urlsDiv = document.getElementById('blocked-urls-list');
+            if (data.blocked_urls && data.blocked_urls.length > 0) {
+                urlsDiv.innerHTML = data.blocked_urls.map(url => `
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-dark rounded">
+                        <span class="text-truncate" style="max-width: 300px;">${url}</span>
+                        <form method="POST" action="/security/unblock" class="d-inline">
+                            <input type="hidden" name="type" value="url">
+                            <input type="hidden" name="item" value="${url}">
+                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-unlock"></i>
+                            </button>
+                        </form>
+                    </div>
+                `).join('');
+            } else {
+                urlsDiv.innerHTML = '<p class="text-muted">No websites blocked yet</p>';
+            }
+            
+            // Update blocked IPs
+            const ipsDiv = document.getElementById('blocked-ips-list');
+            if (data.blocked_ips && data.blocked_ips.length > 0) {
+                ipsDiv.innerHTML = data.blocked_ips.map(ip => `
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-dark rounded">
+                        <span>${ip}</span>
+                        <form method="POST" action="/security/unblock" class="d-inline">
+                            <input type="hidden" name="type" value="ip">
+                            <input type="hidden" name="item" value="${ip}">
+                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-unlock"></i>
+                            </button>
+                        </form>
+                    </div>
+                `).join('');
+            } else {
+                ipsDiv.innerHTML = '<p class="text-muted">No IP addresses blocked yet</p>';
+            }
+        });
+}
+
+// Load blocked items on page load
+document.addEventListener('DOMContentLoaded', loadBlockedItems);
+</script>
+{% endblock %}

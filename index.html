@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row align-items-center" style="min-height: 70vh;">
+    <div class="col-lg-6">
+        <h1 class="display-4 fw-bold mb-4">
+            Protect Your Digital Identity
+        </h1>
+        <p class="lead mb-4">
+            Advanced dark web monitoring, SQL injection prevention, and real-time threat detection 
+            to keep your data safe from cybercriminals.
+        </p>
+        <div class="d-grid gap-2 d-md-flex">
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5">
+                <i class="bi bi-shield-check"></i> Get Started
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg px-5">
+                Login
+            </a>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card p-4 text-center">
+                    <i class="bi bi-shield-exclamation display-1 text-primary mb-3"></i>
+                    <h5>Dark Web Monitoring</h5>
+                    <p class="small">Real-time credential leak detection</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card p-4 text-center">
+                    <i class="bi bi-database-lock display-1 text-success mb-3"></i>
+                    <h5>SQL Injection Prevention</h5>
+                    <p class="small">Advanced database security</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card p-4 text-center">
+                    <i class="bi bi-bell display-1 text-warning mb-3"></i>
+                    <h5>Real-Time Alerts</h5>
+                    <p class="small">Instant breach notifications</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card p-4 text-center">
+                    <i class="bi bi-file-lock display-1 text-danger mb-3"></i>
+                    <h5>Data Leak Prevention</h5>
+                    <p class="small">Comprehensive data protection</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <h2 class="text-center mb-4">How It Works</h2>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4">
+            <div class="text-center mb-3">
+                <span class="badge bg-primary fs-4">1</span>
+            </div>
+            <h5 class="text-center">Monitor</h5>
+            <p class="text-center">Add your credentials for continuous dark web monitoring</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4">
+            <div class="text-center mb-3">
+                <span class="badge bg-primary fs-4">2</span>
+            </div>
+            <h5 class="text-center">Detect</h5>
+            <p class="text-center">AI-powered systems scan for threats and vulnerabilities</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4">
+            <div class="text-center mb-3">
+                <span class="badge bg-primary fs-4">3</span>
+            </div>
+            <h5 class="text-center">Alert</h5>
+            <p class="text-center">Receive instant notifications and take action immediately</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,467 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - DarkNet Defend{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="bi bi-speedometer2"></i> Security Dashboard
+            <span class="badge bg-success ms-2">Online</span>
+        </h2>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-1">Monitored Items</h6>
+                    <h2 class="mb-0">{{ total_monitored }}</h2>
+                </div>
+                <i class="bi bi-eye display-4 text-primary"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-1">Compromised</h6>
+                    <h2 class="mb-0 {% if compromised > 0 %}text-danger{% else %}text-success{% endif %}">{{ compromised }}</h2>
+                </div>
+                <i class="bi bi-{% if compromised > 0 %}exclamation-triangle{% else %}shield-check{% endif %} display-4 {% if compromised > 0 %}text-danger{% else %}text-success{% endif %}"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-1">Unread Alerts</h6>
+                    <h2 class="mb-0 {% if unread_alerts > 0 %}text-warning{% else %}text-success{% endif %}">{{ unread_alerts }}</h2>
+                </div>
+                <i class="bi bi-bell display-4 {% if unread_alerts > 0 %}text-warning{% else %}text-success{% endif %}"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-1">Threats Blocked</h6>
+                    <h2 class="mb-0 text-success">{{ sql_blocks }}</h2>
+                </div>
+                <i class="bi bi-shield-check display-4 text-success"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Overview -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-shield-exclamation display-3 text-primary mb-2"></i>
+            <h5>Dark Web Monitoring</h5>
+            <p class="small mb-2">
+                {% if total_monitored > 0 %}
+                    {{ total_monitored }} credentials monitored
+                {% else %}
+                    No credentials monitored yet
+                {% endif %}
+            </p>
+            {% if total_monitored > 0 %}
+                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Active</span>
+            {% else %}
+                <span class="badge bg-secondary"><i class="bi bi-clock"></i> Ready</span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card p-3 text-center h-100">
+            <i class="bi bi-database-lock display-3 text-success mb-2"></i>
+            <h5>SQL Injection Prevention</h5>
+            <p class="small mb-2">{{ sql_blocks }} attacks blocked</p>
+            <span class="badge bg-success"><i class="bi bi-shield-check"></i> Protected</span>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <a href="{{ url_for('alerts') }}" class="text-decoration-none">
+            <div class="card p-3 text-center h-100">
+                <i class="bi bi-bell display-3 {% if unread_alerts > 0 %}text-warning{% else %}text-success{% endif %} mb-2"></i>
+                <h5>Real-Time Alerts</h5>
+                <p class="small mb-2">
+                    {% if unread_alerts > 0 %}
+                        {{ unread_alerts }} unread alerts
+                    {% else %}
+                        No new alerts
+                    {% endif %}
+                </p>
+                {% if unread_alerts > 0 %}
+                    <span class="badge bg-warning text-dark pulse"><i class="bi bi-exclamation-circle"></i> {{ unread_alerts }} New</span>
+                {% else %}
+                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> All Clear</span>
+                {% endif %}
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3">
+        <a href="{{ url_for('leak_monitor') }}" class="text-decoration-none">
+            <div class="card p-3 text-center h-100">
+                <i class="bi bi-file-lock display-3 {% if leak_detections_count > 0 %}text-danger{% else %}text-success{% endif %} mb-2"></i>
+                <h5>Data Leak Monitor</h5>
+                <p class="small mb-2">
+                    {% if leak_detections_count > 0 %}
+                        {{ leak_detections_count }} leaks detected
+                    {% else %}
+                        No leaks detected
+                    {% endif %}
+                </p>
+                {% if leak_detections_count > 0 %}
+                    <span class="badge bg-danger pulse"><i class="bi bi-exclamation-triangle"></i> {{ leaks_prevented }} Prevented</span>
+                {% else %}
+                    <span class="badge bg-success"><i class="bi bi-shield-check"></i> Secure</span>
+                {% endif %}
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Quick Actions for Leak Monitoring -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card p-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h5 class="mb-0"><i class="bi bi-lightning-charge text-warning"></i> Quick Actions</h5>
+                </div>
+                <div>
+                    <a href="{{ url_for('leak_monitor') }}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-shield-exclamation"></i> Leak Monitor
+                    </a>
+                    <a href="{{ url_for('notification_settings') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-bell"></i> Notification Settings
+                    </a>
+                    <form method="POST" action="{{ url_for('manual_leak_scan') }}" class="d-inline">
+                        <button type="submit" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-search"></i> Scan for Leaks
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Add Monitoring Form -->
+    <div class="col-lg-6 mb-4">
+        <div class="card p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-plus-circle"></i> Add Credential Monitoring
+            </h4>
+            
+            <form method="POST" action="{{ url_for('add_monitor') }}">
+                <div class="mb-3">
+                    <label for="credential_type" class="form-label">Credential Type</label>
+                    <select class="form-select" id="credential_type" name="credential_type" required>
+                        <option value="">Select type...</option>
+                        <option value="email">Email Address</option>
+                        <option value="phone">Phone Number</option>
+                        <option value="credit_card">Credit Card</option>
+                        <option value="username">Username</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="credential_value" class="form-label">Credential Value</label>
+                    <input type="text" class="form-control" id="credential_value" 
+                           name="credential_value" placeholder="Enter value to monitor" required>
+                    <div class="form-text">
+                        <i class="bi bi-info-circle"></i> Try: test@example.com (simulated breach)
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-shield-plus"></i> Start Monitoring
+                </button>
+            </form>
+            
+            <div class="alert alert-info mt-3 mb-0">
+                <i class="bi bi-lightbulb"></i>
+                <strong>How it works:</strong> Your credentials are checked against dark web databases. You'll be alerted immediately if any breaches are found.
+            </div>
+        </div>
+    </div>
+    
+    <!-- SQL Injection Test -->
+    <div class="col-lg-6 mb-4">
+        <div class="card p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-bug-fill text-danger"></i> SQL Injection Protection Test
+            </h4>
+            
+            <p class="mb-3">Test our security by trying these malicious SQL inputs:</p>
+            
+            <div class="list-group mb-3">
+                <div class="list-group-item bg-dark border-danger">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-danger">Login Bypass Attack</strong>
+                            <code class="d-block mt-1 text-warning small">' OR '1'='1</code>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" onclick="copyToTest(this.previousElementSibling.querySelector('code').textContent)">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="list-group-item bg-dark border-danger mt-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-danger">Drop Table Attack</strong>
+                            <code class="d-block mt-1 text-warning small">'; DROP TABLE users--</code>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" onclick="copyToTest(this.previousElementSibling.querySelector('code').textContent)">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="list-group-item bg-dark border-danger mt-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-danger">Union Select Attack</strong>
+                            <code class="d-block mt-1 text-warning small">' UNION SELECT * FROM users--</code>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" onclick="copyToTest(this.previousElementSibling.querySelector('code').textContent)">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <form method="POST" action="{{ url_for('add_monitor') }}">
+                <input type="hidden" name="credential_type" value="email">
+                <div class="mb-3">
+                    <label for="sql_test_input" class="form-label">Test SQL Injection Here:</label>
+                    <input type="text" class="form-control" id="sql_test_input" 
+                           name="credential_value" placeholder="Paste attack code here and submit">
+                </div>
+                <button type="submit" class="btn btn-danger w-100">
+                    <i class="bi bi-shield-x"></i> Test Attack (Will Be Blocked!)
+                </button>
+            </form>
+            
+            <div class="alert alert-success mt-3 mb-0">
+                <i class="bi bi-check-circle-fill"></i>
+                <strong>Protected!</strong> All attacks are detected, blocked, and logged with full details.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Alerts and Monitored Items -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">
+                    <i class="bi bi-bell"></i> Recent Alerts
+                </h4>
+                <a href="{{ url_for('alerts') }}" class="btn btn-sm btn-outline-primary">
+                    View All <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+            
+            {% if recent_alerts %}
+                <div class="list-group">
+                    {% for alert in recent_alerts %}
+                        <div class="list-group-item bg-transparent border-secondary mb-2">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-1">
+                                        {% if alert.severity == 'critical' %}
+                                            <span class="badge bg-danger me-2"><i class="bi bi-exclamation-triangle-fill"></i> Critical</span>
+                                        {% elif alert.severity == 'high' %}
+                                            <span class="badge bg-warning me-2"><i class="bi bi-exclamation-circle-fill"></i> High</span>
+                                        {% elif alert.severity == 'medium' %}
+                                            <span class="badge bg-info me-2"><i class="bi bi-info-circle-fill"></i> Medium</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary me-2">Low</span>
+                                        {% endif %}
+                                        {% if not alert.is_read %}
+                                            <span class="badge bg-success">New</span>
+                                        {% endif %}
+                                    </div>
+                                    <strong>{{ alert.title }}</strong>
+                                    <p class="mb-1 small">{{ alert.description[:80] }}{% if alert.description|length > 80 %}...{% endif %}</p>
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock"></i> {{ alert.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-check-circle display-1 text-success"></i>
+                    <h5 class="mt-3">No Alerts</h5>
+                    <p>All systems secure. No threats detected.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="col-lg-6 mb-4">
+        <div class="card p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-graph-up"></i> Security Overview
+            </h4>
+            
+            <div class="mb-3 p-3 bg-dark rounded">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-eye text-primary"></i> Monitored Credentials</span>
+                    <strong>{{ total_monitored }}</strong>
+                </div>
+            </div>
+            
+            <div class="mb-3 p-3 bg-dark rounded">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-shield-check text-success"></i> SQL Attacks Blocked</span>
+                    <strong>{{ sql_blocks }}</strong>
+                </div>
+            </div>
+            
+            <div class="mb-3 p-3 bg-dark rounded">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-exclamation-triangle {% if compromised > 0 %}text-danger{% else %}text-success{% endif %}"></i> Compromised Items</span>
+                    <strong class="{% if compromised > 0 %}text-danger{% else %}text-success{% endif %}">{{ compromised }}</strong>
+                </div>
+            </div>
+            
+            <div class="mb-3 p-3 bg-dark rounded">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-bell {% if unread_alerts > 0 %}text-warning{% else %}text-success{% endif %}"></i> Unread Alerts</span>
+                    <strong class="{% if unread_alerts > 0 %}text-warning{% else %}text-success{% endif %}">{{ unread_alerts }}</strong>
+                </div>
+            </div>
+            
+            <div class="d-grid gap-2 mt-3">
+                <a href="{{ url_for('alerts') }}" class="btn btn-primary">
+                    <i class="bi bi-list-check"></i> View All Alerts
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Security Logs -->
+<div class="row">
+    <div class="col-12">
+        <div class="card p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-shield-check"></i> Recent Security Events
+            </h4>
+            
+            {% if recent_logs %}
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th><i class="bi bi-tag"></i> Type</th>
+                                <th><i class="bi bi-info-circle"></i> Details</th>
+                                <th><i class="bi bi-exclamation-diamond"></i> Severity</th>
+                                <th><i class="bi bi-shield"></i> Status</th>
+                                <th><i class="bi bi-clock"></i> Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_logs %}
+                                <tr>
+                                    <td>
+                                        <i class="bi bi-{% if log.log_type == 'sql_injection_attempt' %}bug-fill text-danger{% elif log.log_type == 'login_attempt' %}door-open{% else %}activity{% endif %}"></i>
+                                        {{ log.log_type.replace('_', ' ').title() }}
+                                    </td>
+                                    <td class="small">{{ log.details[:80] }}{% if log.details|length > 80 %}...{% endif %}</td>
+                                    <td>
+                                        {% if log.severity == 'high' %}
+                                            <span class="badge bg-danger">High</span>
+                                        {% elif log.severity == 'medium' %}
+                                            <span class="badge bg-warning text-dark">Medium</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Low</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.blocked %}
+                                            <span class="badge bg-success"><i class="bi bi-shield-check"></i> Blocked</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Allowed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="small text-muted">{{ log.timestamp.strftime('%H:%M:%S') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-shield-check display-1 text-success"></i>
+                    <h5 class="mt-3">No Security Events</h5>
+                    <p>System is monitoring. All activity will be logged here.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.7; transform: scale(1.05); }
+    }
+    .pulse {
+        animation: pulse 2s ease-in-out infinite;
+    }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyToTest(text) {
+    const input = document.getElementById('sql_test_input');
+    input.value = text;
+    input.focus();
+    input.style.borderColor = '#dc3545';
+    input.style.boxShadow = '0 0 10px rgba(220, 53, 69, 0.5)';
+    
+    // Show visual feedback
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+    btn.classList.remove('btn-outline-danger');
+    btn.classList.add('btn-success');
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-danger');
+    }, 2000);
+}
+</script>
+{% endblock %}

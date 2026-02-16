@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+
+{% block title %}Data Leak Monitor - DarkNet Defend{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="bi bi-shield-exclamation"></i> Data Leak Monitor
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm ms-3">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </h2>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-1">Total Leaks Detected</h6>
+                    <h2 class="mb-0 {% if total_leaks > 0 %}text-danger{% else %}text-success{% endif %}">{{ total_leaks }}</h2>
+                </div>
+                <i class="bi bi-exclamation-triangle display-4 {% if total_leaks > 0 %}text-danger{% else %}text-success{% endif %}"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-1">Leaks Prevented</h6>
+                    <h2 class="mb-0 text-success">{{ prevented_leaks }}</h2>
+                </div>
+                <i class="bi bi-shield-check display-4 text-success"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-1">Critical Leaks</h6>
+                    <h2 class="mb-0 {% if critical_leaks > 0 %}text-danger{% else %}text-success{% endif %}">{{ critical_leaks }}</h2>
+                </div>
+                <i class="bi bi-exclamation-octagon display-4 {% if critical_leaks > 0 %}text-danger{% else %}text-success{% endif %}"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-1">Assets Monitored</h6>
+                    <h2 class="mb-0 text-primary">{{ monitored_assets|length }}</h2>
+                </div>
+                <i class="bi bi-eye display-4 text-primary"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions Bar -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card p-3 action-bar">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <a href="{{ url_for('security_scan_page') }}" class="btn btn-primary">
+                        <i class="bi bi-shield-shaded"></i> Real-Time Scan
+                    </a>
+                    <form method="POST" action="{{ url_for('manual_leak_scan') }}" class="d-inline ms-2">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-search"></i> Quick Scan
+                        </button>
+                    </form>
+                    <a href="{{ url_for('notification_settings') }}" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-bell"></i> Notification Settings
+                    </a>
+                </div>
+                
+                <!-- Simulate Leak (for testing) -->
+                <div class="dropup">
+                    <button class="btn btn-outline-warning dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-bug"></i> Simulate Leak (Test)
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <form method="POST" action="{{ url_for('simulate_leak') }}">
+                            <input type="hidden" name="data_type" value="image">
+                            <button type="submit" class="dropdown-item">🖼️ Simulate Image Leak</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('simulate_leak') }}">
+                            <input type="hidden" name="data_type" value="video">
+                            <button type="submit" class="dropdown-item">🎥 Simulate Video Leak</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('simulate_leak') }}">
+                            <input type="hidden" name="data_type" value="document">
+                            <button type="submit" class="dropdown-item">📄 Simulate Document Leak</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('simulate_leak') }}">
+                            <input type="hidden" name="data_type" value="credentials">
+                            <button type="submit" class="dropdown-item">🔐 Simulate Credential Leak</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('simulate_leak') }}">
+                            <input type="hidden" name="data_type" value="text">
+                            <button type="submit" class="dropdown-item">📝 Simulate Text Leak</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Add Asset Form -->
+    <div class="col-lg-4 mb-4">
+        <div class="card p-4 h-100">
+            <h4 class="mb-3">
+                <i class="bi bi-plus-circle text-primary"></i> Add Asset to Monitor
+            </h4>
+            
+            <form method="POST" action="{{ url_for('add_monitored_asset') }}">
+                <div class="mb-3">
+                    <label for="asset_type" class="form-label">Asset Type</label>
+                    <select class="form-select" id="asset_type" name="asset_type" required>
+                        <option value="">Select type...</option>
+                        <option value="email">📧 Email Address</option>
+                        <option value="phone">📱 Phone Number</option>
+                        <option value="image">🖼️ Image (by filename/URL)</option>
+                        <option value="video">🎥 Video (by filename/URL)</option>
+                        <option value="document">📄 Document (by filename)</option>
+                        <option value="text">📝 Text/Content</option>
+                        <option value="credentials">🔐 Username/Password</option>
+                        <option value="financial">💳 Financial Data</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="asset_value" class="form-label">Asset Value</label>
+                    <input type="text" class="form-control" id="asset_value" 
+                           name="asset_value" placeholder="Email, filename, URL, etc." required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="asset_name" class="form-label">Friendly Name (optional)</label>
+                    <input type="text" class="form-control" id="asset_name" 
+                           name="asset_name" placeholder="e.g., Personal Photo">
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-shield-plus"></i> Add to Monitoring
+                </button>
+            </form>
+            
+            <div class="alert alert-info mt-3 mb-0 small">
+                <i class="bi bi-lightbulb"></i>
+                <strong>Tip:</strong> Add emails like <code>test@example.com</code> to see simulated leak detection.
+            </div>
+        </div>
+    </div>
+    
+    <!-- Monitored Assets -->
+    <div class="col-lg-8 mb-4">
+        <div class="card p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-eye text-primary"></i> Monitored Assets
+            </h4>
+            
+            {% if monitored_assets %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Asset</th>
+                            <th>Status</th>
+                            <th>Last Checked</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asset in monitored_assets %}
+                        <tr>
+                            <td>
+                                {% if asset.asset_type == 'email' %}📧
+                                {% elif asset.asset_type == 'phone' %}📱
+                                {% elif asset.asset_type == 'image' %}🖼️
+                                {% elif asset.asset_type == 'video' %}🎥
+                                {% elif asset.asset_type == 'document' %}📄
+                                {% elif asset.asset_type == 'credentials' %}🔐
+                                {% elif asset.asset_type == 'financial' %}💳
+                                {% else %}📊
+                                {% endif %}
+                                {{ asset.asset_type|title }}
+                            </td>
+                            <td>
+                                <span title="{{ asset.asset_identifier }}">
+                                    {{ asset.asset_name or asset.asset_identifier[:30] }}
+                                    {% if asset.asset_identifier|length > 30 %}...{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                {% if asset.is_compromised %}
+                                <span class="badge bg-danger pulse">
+                                    <i class="bi bi-exclamation-triangle"></i> Compromised
+                                </span>
+                                {% else %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Secure
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ asset.last_checked.strftime('%Y-%m-%d %H:%M') if asset.last_checked else 'Never' }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('remove_monitored_asset', asset_id=asset.id) }}" 
+                                      class="d-inline" onsubmit="return confirm('Remove this asset from monitoring?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Remove asset">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+                <p class="text-muted mt-2">No assets being monitored yet. Add some above!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Leak Detections History -->
+<div class="row">
+    <div class="col-12">
+        <div class="card p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-clock-history text-warning"></i> Leak Detection History
+            </h4>
+            
+            {% if leak_detections %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Source</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Notified</th>
+                            <th>Detected</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leak in leak_detections %}
+                        <tr>
+                            <td>
+                                {% if leak.data_type == 'image' %}🖼️
+                                {% elif leak.data_type == 'video' %}🎥
+                                {% elif leak.data_type == 'document' %}📄
+                                {% elif leak.data_type == 'text' %}📝
+                                {% elif leak.data_type == 'credentials' %}🔐
+                                {% elif leak.data_type == 'financial' %}💳
+                                {% elif leak.data_type == 'audio' %}🔊
+                                {% elif leak.data_type == 'email' %}📧
+                                {% elif leak.data_type == 'phone' %}📱
+                                {% else %}📊
+                                {% endif %}
+                                {{ leak.data_type|title }}
+                            </td>
+                            <td>
+                                <span title="{{ leak.data_description }}">
+                                    {{ leak.data_description[:50] if leak.data_description else 'No description' }}
+                                    {% if leak.data_description and leak.data_description|length > 50 %}...{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ leak.source }}</td>
+                            <td>
+                                {% if leak.severity == 'critical' %}
+                                <span class="badge bg-danger">🚨 Critical</span>
+                                {% elif leak.severity == 'high' %}
+                                <span class="badge bg-danger">🔴 High</span>
+                                {% elif leak.severity == 'medium' %}
+                                <span class="badge bg-warning text-dark">🟠 Medium</span>
+                                {% else %}
+                                <span class="badge bg-info">⚠️ Low</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if leak.is_prevented %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-shield-check"></i> Prevented
+                                </span>
+                                <small class="d-block text-muted">{{ leak.prevention_action[:20] if leak.prevention_action else '' }}...</small>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-hourglass-split"></i> Pending
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if leak.email_notified %}
+                                <span class="badge bg-success me-1" title="Email sent">📧</span>
+                                {% endif %}
+                                {% if leak.sms_notified %}
+                                <span class="badge bg-success" title="SMS sent">📱</span>
+                                {% endif %}
+                                {% if not leak.email_notified and not leak.sms_notified %}
+                                <span class="badge bg-secondary">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ leak.detected_at.strftime('%Y-%m-%d %H:%M') if leak.detected_at else 'Unknown' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-shield-check display-1 text-success"></i>
+                <p class="text-success mt-2"><strong>No leaks detected!</strong></p>
+                <p class="text-muted">Your data appears to be safe. We'll notify you if any leaks are detected.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Leak Types Breakdown -->
+{% if leak_by_type %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card p-4">
+            <h5 class="mb-3"><i class="bi bi-pie-chart"></i> Leaks by Data Type</h5>
+            <div class="row">
+                {% for type, count in leak_by_type.items() %}
+                <div class="col-md-2 col-4 text-center mb-3">
+                    <div class="display-6">
+                        {% if type == 'image' %}🖼️
+                        {% elif type == 'video' %}🎥
+                        {% elif type == 'document' %}📄
+                        {% elif type == 'text' %}📝
+                        {% elif type == 'credentials' %}🔐
+                        {% elif type == 'financial' %}💳
+                        {% elif type == 'audio' %}🔊
+                        {% elif type == 'email' %}📧
+                        {% elif type == 'phone' %}📱
+                        {% else %}📊
+                        {% endif %}
+                    </div>
+                    <div class="h4 mb-0">{{ count }}</div>
+                    <small class="text-muted">{{ type|title }}</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
