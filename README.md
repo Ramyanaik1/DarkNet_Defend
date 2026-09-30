@@ -106,8 +106,8 @@ MajorProject/
 
 ### Step 1: Clone the Repository
 ```bash
-git clone https://github.com/Rakeshbjp/Darknet-defend.git
-cd Darknet-defend
+git clone https://github.com/Ramyanaik1/DarkNet_Defend.git
+cd DarkNet_Defend
 ```
 
 ### Step 2: Create Virtual Environment
@@ -250,21 +250,31 @@ Identifies:
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
+## 🙋 My Contribution (Ramya Umesh Naik)
+
+- Built SQL injection and abnormal-access detection by monitoring database activity and requests
+- Designed real-time alerting on top of database logs to flag unauthorized access for review
+- Worked on backend monitoring and analysis to improve data integrity and query performance
+- Tested the scanner against SQL injection patterns (for example `' OR '1'='1` and `UNION SELECT`)
+
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👨‍💻 Author
+## 👥 Team
 
-**Rakesh Kumar**
-- GitHub: [@Rakeshbjp](https://github.com/Rakeshbjp)
+This was a team project built as our final-year major project.
+
+- **Ramya Umesh Naik** ([@Ramyanaik1](https://github.com/Ramyanaik1)) – Backend & database security monitoring: SQL injection and abnormal-access detection, database activity/log monitoring, and real-time alerting
+- **Rakesh Kumar** ([@Rakeshbjp](https://github.com/Rakeshbjp)) – Co-developer
+
+Original team repository: https://github.com/Rakeshbjp/Darknet-defend
 
 ## 🙏 Acknowledgments
 
 - Flask documentation and community
 - Bootstrap for the amazing UI framework
 - Twilio for SMS services
-- All contributors and testers
 
 ---
 
